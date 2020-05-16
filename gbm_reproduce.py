@@ -15,6 +15,17 @@ import multiprocessing
 diabetes = datasets.load_diabetes()
 X, y = diabetes.data, diabetes.target
 
+X = pd.DataFrame(X)
+
+for col in X.columns.tolist():
+    for _ in range(10):
+        X[f'{col}_{_}'] = np.random.permutation(X[col].values)
+
+X = np.array(X)
+
+#bc_data = datasets.load_breast_cancer()
+#X, y = bc_data.data, bc_data.target
+
 y = np.where(y>150, 1, 0)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.1, random_state=13)
