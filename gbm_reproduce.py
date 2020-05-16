@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 import xgboost as xgb
 import lightgbm as lgb
 
+import multiprocessing
+
 # prep data
 diabetes = datasets.load_diabetes()
 X, y = diabetes.data, diabetes.target
@@ -34,7 +36,7 @@ def run_sklearn():
 
     final_params = grid.best_params_
 
-    reg = ensemble.GradientBoostingClassifier(**grid.best_params_)
+    reg = ensemble.GradientBoostingClassifier(**final_params)
     reg.fit(X_train, y_train)
 
     auc = roc_auc_score(y_test, reg.predict(X_test))
@@ -108,18 +110,18 @@ def main():
     print('running lightgbm')
     lgb_auc = run_lgb()
     
-    if os.path.exists('~/gbm_reproducibility/results.txt'):
-        with open('~/gbm_reproducibility/results.txt', 'a') as f:
-            f.write('\nrun results: \n')
-            f.write(f'sklearn: {sklearn_auc}')
-            f.write(f'xgboost: {xgb_auc}')
-            f.write(f'lightgbm: {lgb_auc}')
+    if os.path.exists('results.txt'):
+        with open('results.txt', 'a') as f:
+            f.write(f'\nrun results ({multiprocessing.cpu_count()} core(s)): \n')
+            f.write(f'sklearn: {sklearn_auc}\n')
+            f.write(f'xgboost: {xgb_auc}\n')
+            f.write(f'lightgbm: {lgb_auc}\n')
     else:
-        with open('~/gbm_reproducibility/results.txt', 'w') as f:
-            f.write('\nrun results: \n')
-            f.write(f'sklearn: {sklearn_auc}')
-            f.write(f'xgboost: {xgb_auc}')
-            f.write(f'lightgbm: {lgb_auc}')
+        with open('results.txt', 'w') as f:
+            f.write(f'\nrun results ({multiprocessing.cpu_count()} core(s)): \n')
+            f.write(f'sklearn: {sklearn_auc}\n')
+            f.write(f'xgboost: {xgb_auc}\n')
+            f.write(f'lightgbm: {lgb_auc}\n')
 
 if __name__ == "__main__":
     main()
