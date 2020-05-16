@@ -1,4 +1,4 @@
-# gbm_repoducibility
+# GBM Reproducibility
 Testing GBM reproducibility
 
 ## Setup
