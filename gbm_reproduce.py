@@ -1,4 +1,4 @@
-
+import os
 import pandas as pd
 import numpy as np
 from sklearn import datasets, ensemble
@@ -16,19 +16,6 @@ X, y = diabetes.data, diabetes.target
 y = np.where(y>150, 1, 0)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.1, random_state=13)
-
-#def run_sklearn():
-    
-#    params = {'n_estimators': 500,
-#              'max_depth': 4,
-#              'min_samples_split': 5,
-#              'learning_rate': 0.01}
-
-#    reg = ensemble.GradientBoostingClassifier(**params)
-#    reg.fit(X_train, y_train)
-
-#    auc = roc_auc_score(y_test, reg.predict(X_test))
-#    print(f'sklearn out of the box: {auc}')
 
 def run_sklearn():
     parameters = {
@@ -51,7 +38,7 @@ def run_sklearn():
     reg.fit(X_train, y_train)
 
     auc = roc_auc_score(y_test, reg.predict(X_test))
-    print(f'sklearn: {auc}')
+    return auc
 
 def run_xgb():
     D_train = xgb.DMatrix(X_train, label=y_train)
@@ -59,11 +46,11 @@ def run_xgb():
 
     clf = xgb.XGBClassifier()
     parameters = {
-         "eta"    : [0.05, 0.10, 0.15, 0.20, 0.25, 0.30 ] ,
-         "max_depth"        : [ 3, 4, 5, 6, 8, 10, 12, 15],
+         "eta"    : [0.05, 0.15, 0.20, 0.30 ] ,
+         "max_depth"        : [ 3, 8, 15],
          "min_child_weight" : [ 1, 3, 5, 7 ],
-         "gamma"            : [ 0.0, 0.1, 0.2 , 0.3, 0.4 ],
-         "colsample_bytree" : [ 0.3, 0.4, 0.5 , 0.7 ]
+         "gamma"            : [ 0.0, 0.2 , 0.4 ],
+         "colsample_bytree" : [ 0.3, 0.5 , 0.7 ]
          }
 
     grid = GridSearchCV(clf,
@@ -72,12 +59,15 @@ def run_xgb():
                         cv=3)
 
     grid.fit(X_train, y_train)
+    
+    final_params = grid.best_params_
+    final_params['random_state'] = 42
 
-    model = xgb.train(grid.best_params_, D_train, 200)
+    model = xgb.train(final_params, D_train, 200)
 
 
     auc = roc_auc_score(y_test, model.predict(D_test))
-    print(f'xgboost: {auc}')
+    return auc
 
 def run_lgb():
     lgb_train = lgb.Dataset(X_train, y_train)
@@ -99,6 +89,7 @@ def run_lgb():
     grid.fit(X=X_train, y=y_train)
     final_params = grid.best_params_
     final_params['metric'] = 'auc'
+    final_params['seed'] = 42
 
     model = lgb.train(final_params,
                            lgb_train,
@@ -107,15 +98,28 @@ def run_lgb():
                            early_stopping_rounds=30)
 
     auc = roc_auc_score(y_test, model.predict(X_test, num_iteration=model.best_iteration))
-    print(f'lightgbm: {auc}')
+    return auc
 
 def main():
     print('running sklearn')
-    run_sklearn()
+    sklearn_auc = run_sklearn()
     print('running xgboost')
-    run_xgb()
+    xgb_auc = run_xgb()
     print('running lightgbm')
-    run_lgb()
+    lgb_auc = run_lgb()
+    
+    if os.path.exists('~/gbm_reproducibility/results.txt'):
+        with open('~/gbm_reproducibility/results.txt', 'a') as f:
+            f.write('\nrun results: \n')
+            f.write(f'sklearn: {sklearn_auc}')
+            f.write(f'xgboost: {xgb_auc}')
+            f.write(f'lightgbm: {lgb_auc}')
+    else:
+        with open('~/gbm_reproducibility/results.txt', 'w') as f:
+            f.write('\nrun results: \n')
+            f.write(f'sklearn: {sklearn_auc}')
+            f.write(f'xgboost: {xgb_auc}')
+            f.write(f'lightgbm: {lgb_auc}')
 
 if __name__ == "__main__":
     main()
