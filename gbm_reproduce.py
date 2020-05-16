@@ -21,7 +21,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 def run_sklearn():
     parameters = {
-        'n_estimators': [200, 300, 400, 500, 600],
         'max_depth': [2, 4, 6, 8],
         'min_samples_split': [3, 5, 8, 10],
         'learning_rate': [0.005, 0.01, 0.05, 0.1]
