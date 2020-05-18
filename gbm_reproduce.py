@@ -19,7 +19,7 @@ X = pd.DataFrame(X)
 
 for col in X.columns.tolist():
     for _ in range(10):
-        X[f'{col}_{_}'] = np.random.permutation(X[col].values)
+        X[f'{col}_{_}'] = np.random.RandomState(seed=42).permutation(X[col].values)
 
 X = np.array(X)
 
